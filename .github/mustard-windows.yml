@@ -1,0 +1,12 @@
+require_uploads: true
+ignore:
+  - windows/build/**
+  - windows/tests/**
+coverage:
+  status:
+    patch:
+      default:
+        # LogonUI and elevated setup need a Windows VM beyond hosted CTest.
+        informational: true
+badge:
+  enabled: true

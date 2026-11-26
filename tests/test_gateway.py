@@ -54,12 +54,15 @@ def test_gateway_serves_local_enrollment_and_treats_relay_as_data():
         (302, {'location': '/app.js'}, b''),
         (200, {'content-type': 'text/html'}, b'<script>alert(1)</script>'),
         (200, {'content-type': 'application/json'}, b'not JSON'),
+        (200, {'content-type': 'application/json'}, b'"not an object or array"'),
         (200, {'content-type': 'application/json'}, b'[' + b' ' * MAX_BODY + b']'),
         (200, {'content-type': 'application/json', 'content-encoding': 'gzip'}, b'{"x": 1}'),
     ],
 )
 def test_gateway_rejects_unsafe_upstream_responses(status, headers, payload):
-    transport = httpx.MockTransport(lambda _: httpx.Response(status, headers=headers, content=payload))
+    transport = httpx.MockTransport(
+        lambda _: httpx.Response(status, headers=headers, stream=httpx.ByteStream(payload))
+    )
     client = TestClient(create_app(BACKEND, transport=transport), base_url=ORIGIN)
     response = client.get('/api/pcs')
     assert response.status_code == 502

@@ -162,8 +162,9 @@ void Enroll(Config& config, const HttpClient& relay) {
     ShowQr(session.url);
     while (std::chrono::steady_clock::now() < deadline) {
         const auto response = relay.Get("/api/enroll/sessions/" + session.id + "?wait=25", 35000);
-        if (response.at("status") == "pending") continue;
-        if (response.at("status") != "complete" || std::chrono::steady_clock::now() >= deadline) break;
+        const auto& status = response.at("status").get_ref<const std::string&>();
+        if (status == "pending") continue;
+        if (status != "complete" || std::chrono::steady_clock::now() >= deadline) break;
         auto key = ParseEnrollmentKey(response);
         std::wcout << L"PC fingerprint: " << ToWide(Fingerprint(key.spki)) << L'\n';
         const auto entered = ToUtf8(Prompt(L"Type the fingerprint shown on your phone: "));

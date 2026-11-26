@@ -433,7 +433,8 @@ def test_enrollment_rejects_invalid_wake_address(env, mac):
     assert client.post('/api/enroll/sessions', json={**PC, 'mac': mac}).status_code == 422
 
 
-def test_legacy_credential_remains_usable(env):
+@pytest.mark.parametrize('saved_pc', [False, True])
+def test_legacy_credential_remains_usable(env, saved_pc):
     client, _ = env
     import main
 
@@ -442,13 +443,29 @@ def test_legacy_credential_remains_usable(env):
     path = main.DATA_DIR / 'credentials.json'
     records = json.loads(path.read_text())
     del records[0]['pcs']
+    if saved_pc:
+        records[0].update(PC)
     path.write_text(json.dumps(records))
     client = TestClient(main.create_app())
 
-    assert client.get('/api/pcs').json() == []
+    expected = [{'pc_name': PC['pc_name']}] if saved_pc else []
+    assert client.get('/api/pcs').json() == expected
     _, rid, options = start_unlock(client)
     assert options['allowCredentials'] == [{'type': 'public-key', 'id': result['credential_id']}]
     assert client.post(f'/api/unlock-requests/{rid}/assertion', json=auth.get(options)).status_code == 200
+    if not saved_pc:
+        phone_id, poll_path = new_enrollment(client, {**PC, 'pc_name': 'another-pc'})
+        options = client.post('/api/enroll/options', json={'session': phone_id}).json()['reuse']
+        assert (
+            client.post(
+                '/api/enroll/reuse',
+                json={'session': phone_id, 'credential': auth.get(options)},
+            ).status_code
+            == 200
+        )
+        assert client.get(poll_path).json()['credential_id'] == result['credential_id']
+        _, _, unlock = start_unlock(client)
+        assert unlock['allowCredentials'] == [{'type': 'public-key', 'id': result['credential_id']}]
 
 
 def test_reuse_passkey_across_pcs(env):
@@ -483,3 +500,93 @@ def test_reuse_passkey_across_pcs(env):
         pc.verify_assertion(assertion, challenge=challenge, rp_id=RP_ID, origin=ORIGIN, pinned=pinned)
         == first['credential_id']
     )
+
+
+def test_enrollment_capacity_reclaims_expired_sessions(env, monkeypatch):
+    client, _ = env
+    import main
+
+    monkeypatch.setattr(main, 'MAX_ENROLL_SESSIONS', 1)
+    _, first_poll = new_enrollment(client)
+    assert client.post('/api/enroll/sessions', json=PC).status_code == 429
+
+    # Advance only the relay clock. Other event loops still use their real monotonic clock.
+    import time
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        main,
+        'time',
+        SimpleNamespace(time=time.time, monotonic=lambda: time.monotonic() + main.ENROLL_TTL + 1),
+    )
+    _, second_poll = new_enrollment(client)
+    assert client.get(first_poll).json() == {'status': 'expired'}
+    assert client.get(second_poll).json() == {'status': 'pending'}
+
+
+def test_enrollment_rejects_invalid_and_duplicate_credentials(env):
+    client, _ = env
+    auth = SoftAuthenticator()
+    enroll(client, auth)
+    phone_id, poll_path = new_enrollment(client)
+    options = client.post('/api/enroll/options', json={'session': phone_id}).json()
+
+    payload = {'session': phone_id}
+    assert client.post('/api/enroll/reuse', json={**payload, 'credential': {}}).status_code == 403
+    verify_path = '/api/enroll/verify'
+    assert client.post(verify_path, json={**payload, 'credential': {}}).status_code == 400
+    duplicate = auth.create(options['options'])
+    assert client.post(verify_path, json={**payload, 'credential': duplicate}).status_code == 409
+    assert client.get(poll_path).json() == {'status': 'pending'}
+
+
+def test_wake_reports_socket_failure(env, monkeypatch):
+    client, _ = env
+    import main
+
+    def unavailable(_):
+        raise OSError
+
+    enroll(client, SoftAuthenticator())
+    monkeypatch.setattr(main, 'send_magic_packet', unavailable)
+    response = client.post('/api/pcs/gaming-pc/wake')
+    assert response.status_code == 503
+    assert response.json() == {'error': 'Could not send the wake packet.'}
+
+
+def test_unlock_limits_pending_requests_and_replaces_same_pc(env, monkeypatch):
+    client, _ = env
+    import main
+
+    monkeypatch.setattr(main, 'MAX_PENDING', 1)
+    _, original, _ = start_unlock(client)
+    path = '/api/unlock-requests'
+    challenge = b64u(os.urandom(32))
+    assert client.post(path, json={'pc_name': 'other-pc', 'challenge': challenge}).status_code == 429
+    assert client.post(path, json={'pc_name': 'other-pc', 'challenge': 'a'}).status_code == 400
+    _, replacement, _ = start_unlock(client)
+    assert replacement != original
+    assert client.get(f'{path}/{original}').json() == {'status': 'expired'}
+    assert client.get(f'{path}/{replacement}').json() == {'status': 'pending'}
+
+
+def test_expired_unlock_cannot_be_approved(env, monkeypatch):
+    client, _ = env
+    import main
+
+    auth = SoftAuthenticator()
+    enroll(client, auth)
+    _, rid, options = start_unlock(client)
+    path = f'/api/unlock-requests/{rid}'
+    assert client.get(path).json() == {'status': 'pending'}
+
+    monkeypatch.setattr(main, 'REQUEST_TTL', -1)
+    assert client.get(path).json() == {'status': 'expired'}
+    assert client.post(f'{path}/assertion', json=auth.get(options)).status_code == 404
+    assert client.get('/api/unlock-requests/pending').json() == []
+
+
+def test_relay_serves_home_and_health(env):
+    client, _ = env
+    assert '<title>Unlock PC</title>' in client.get('/').text
+    assert client.get('/healthz').json() == {'ok': True}

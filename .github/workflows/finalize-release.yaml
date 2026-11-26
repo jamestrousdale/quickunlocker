@@ -92,7 +92,7 @@ jobs:
         run: |
           set -euo pipefail
           notes="$RUNNER_TEMP/quickunlocker-release.md"
-          printf '%s\n\nRelay and gateway container (linux/arm64 and linux/amd64)\n\n`%s`\n' "$RELEASE_NOTES" "$IMAGE_REF" > "$notes"
+          printf '%s\n\nRelay and gateway container (linux/arm64 and linux/amd64)\n\n    %s\n' "$RELEASE_NOTES" "$IMAGE_REF" > "$notes"
           assets=(dist/quickunlocker.dll dist/quickunlocker-setup.exe dist/docker-compose.yml dist/docker-compose.gateway.yml dist/.env.example dist/THIRD_PARTY_NOTICES.txt dist/SHA256SUMS)
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber

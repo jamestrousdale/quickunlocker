@@ -42,7 +42,6 @@ jobs:
 
   cpp-coverage:
     needs: [windows]
-    if: always() && !cancelled()
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -55,6 +54,7 @@ jobs:
       - uses: hotdog-werx/mustard@171f9e94181923330a53cad9691fa931ac06e08c # badge and reusable-workflow fixes
         with:
           name: cpp
+          config: .github/mustard-windows.yml
           config-source: head
           fail-ci: 'true'
 

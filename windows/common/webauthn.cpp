@@ -202,8 +202,11 @@ std::string VerifyAssertion(const Json& assertion, const Digest& challenge,
         auto authData = DecodeBase64Url(assertion.at("authenticator_data").get<std::string>());
         const auto der = DecodeBase64Url(assertion.at("signature").get<std::string>());
         const auto client = ParseJson({reinterpret_cast<const char*>(clientData.data()), clientData.size()});
-        if (client.at("type") != "webauthn.get" || client.at("challenge") != EncodeBase64Url(challenge) ||
-            client.at("origin") != origin || client.value("crossOrigin", false)) {
+        const auto& type = client.at("type").get_ref<const std::string&>();
+        const auto& encodedChallenge = client.at("challenge").get_ref<const std::string&>();
+        const auto& clientOrigin = client.at("origin").get_ref<const std::string&>();
+        if (type != "webauthn.get" || encodedChallenge != EncodeBase64Url(challenge) ||
+            std::string_view(clientOrigin) != origin || client.value("crossOrigin", false)) {
             return {};
         }
         const auto rpHash = Sha256(AsBytes(rpId));

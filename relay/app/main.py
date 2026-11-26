@@ -19,7 +19,7 @@ import time
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 from credential_store import CredentialStore, matches_pc
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -422,9 +422,8 @@ def create_app() -> FastAPI:
 
 
 async def http_error(_: Request, exc: Exception) -> JSONResponse:
-    if isinstance(exc, HTTPException):
-        return JSONResponse({'error': exc.detail}, status_code=exc.status_code)
-    return JSONResponse({'error': 'Internal relay error.'}, status_code=500)
+    error = cast('HTTPException', exc)
+    return JSONResponse({'error': error.detail}, status_code=error.status_code)
 
 
 app = create_app()

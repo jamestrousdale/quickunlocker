@@ -32,6 +32,7 @@ jobs:
         with:
           mode: upload
           name: cpp
+          config: .github/mustard-windows.yml
           files: coverage-cpp.xml
           format: cobertura
           shard: windows-x64
