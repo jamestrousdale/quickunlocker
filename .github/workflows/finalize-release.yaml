@@ -1,0 +1,102 @@
+name: Finalize release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+concurrency:
+  group: release-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    if: github.event.pull_request.merged && startsWith(github.event.pull_request.head.ref, 'release/')
+    uses: ./.github/workflows/windows-build.yaml
+    with:
+      release-artifacts: true
+
+  containers:
+    if: github.event.pull_request.merged && startsWith(github.event.pull_request.head.ref, 'release/')
+    uses: ./.github/workflows/container-build.yaml
+    with:
+      release-artifacts: true
+
+  publish:
+    needs: [windows, containers]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: '0.12.24'
+          enable-cache: true
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-x64
+          path: dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: container-*
+          merge-multiple: true
+          path: containers
+      - id: releez
+        uses: hotdog-werx/releez@7c76cfb8f6c6f023cc297927a35f444392811afb # 1.1.2
+        with:
+          mode: finalize
+      - name: Publish relay image and assemble release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.releez.outputs.release-version }}
+          IMAGE_VERSION: ${{ steps.releez.outputs.docker-version }}
+        run: |
+          set -euo pipefail
+          : "${RELEASE_TAG:?Missing release tag}" "${IMAGE_VERSION:?Missing image version}"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          image_tag="$image:$IMAGE_VERSION"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          for arch in arm64 amd64; do
+            docker load --input "containers/quickunlocker-$arch.tar.gz"
+            docker tag "quickunlocker:$arch" "$image_tag-$arch"
+            docker push "$image_tag-$arch"
+          done
+          docker buildx imagetools create --tag "$image_tag" "$image_tag-arm64" "$image_tag-amd64"
+          digest=$(docker buildx imagetools inspect "$image_tag" --format '{{json .Manifest.Digest}}' | jq -er '.')
+          [[ $digest =~ ^sha256:[0-9a-f]{64}$ ]]
+          image_ref="$image@$digest"
+
+          for compose in docker-compose.yml docker-compose.gateway.yml; do
+            sed "s|^    build: ./app$|    image: $image_ref|" "relay/$compose" > "dist/$compose"
+          done
+          cp relay/.env.example dist/.env.example
+          cp windows/THIRD_PARTY_NOTICES.txt dist/THIRD_PARTY_NOTICES.txt
+          docker compose --env-file dist/.env.example -f dist/docker-compose.yml config --quiet
+          GATEWAY_BACKEND=https://pi.example.com GATEWAY_LISTEN=127.0.0.1 docker compose -f dist/docker-compose.gateway.yml config --quiet
+          (cd dist && sha256sum quickunlocker.dll quickunlocker-setup.exe docker-compose.yml docker-compose.gateway.yml .env.example THIRD_PARTY_NOTICES.txt > SHA256SUMS)
+          printf 'IMAGE_REF=%s\n' "$image_ref" >> "$GITHUB_ENV"
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.releez.outputs.release-version }}
+          RELEASE_NOTES: ${{ steps.releez.outputs.release-notes }}
+        run: |
+          set -euo pipefail
+          notes="$RUNNER_TEMP/quickunlocker-release.md"
+          printf '%s\n\nRelay and gateway container (linux/arm64 and linux/amd64)\n\n`%s`\n' "$RELEASE_NOTES" "$IMAGE_REF" > "$notes"
+          assets=(dist/quickunlocker.dll dist/quickunlocker-setup.exe dist/docker-compose.yml dist/docker-compose.gateway.yml dist/.env.example dist/THIRD_PARTY_NOTICES.txt dist/SHA256SUMS)
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            gh release edit "$RELEASE_TAG" --notes-file "$notes"
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "$RELEASE_TAG" --notes-file "$notes"
+          fi

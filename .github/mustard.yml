@@ -1,0 +1,6 @@
+require_uploads: true
+ignore:
+  - windows/build/**
+  - windows/tests/**
+badge:
+  enabled: true

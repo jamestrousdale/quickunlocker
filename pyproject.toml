@@ -1,0 +1,52 @@
+[project]
+name = "quickunlocker"
+description = "Phone passkey sign-in for Windows and LAN wake relay"
+version = "0.0.0.dev0"
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+license = "MIT"
+dependencies = [
+  "cryptography==50.0.2",
+  "fastapi==0.165.0",
+  "httpx==0.28.1",
+  "uvicorn==0.54.0",
+  "webauthn==3.0.1",
+]
+
+[dependency-groups]
+dev = ["cbor2==6.3.0", "pytest==9.2.0", "pytest-cov==7.0.0"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["relay/app", "pc-sim"]
+
+[tool.ruff]
+extend = ".repolish/hotdogwerx-devkit-python/configs/ruff.toml"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["ANN", "D", "INP001", "S101", "PLC0415", "BLE001"]
+# The simulator is an interactive CLI. Route annotations are used for request inputs.
+"pc-sim/*.py" = [
+  "C901",
+  "D",
+  "EM",
+  "EXE001",
+  "INP001",
+  "PLR0911",
+  "T201",
+  "TRY003",
+]
+"relay/app/*.py" = ["ANN202", "C901", "D", "INP001", "PLR0915"]
+
+[tool.ty.environment]
+extra-paths = ["relay/app", "pc-sim"]
+
+[tool.releez]
+base-branch = "master"
+create-pr = true
+
+[tool.releez.hooks]
+post-changelog = [["uv", "version", "{version}"]]

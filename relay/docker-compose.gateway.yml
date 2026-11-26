@@ -1,0 +1,26 @@
+services:
+  gateway:
+    build: ./app
+    restart: unless-stopped
+    environment:
+      GATEWAY_BACKEND: ${GATEWAY_BACKEND:?Set the Pi backend HTTPS origin}
+    command:
+      - uvicorn
+      - --factory
+      - gateway:create_app
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8443'
+      - --ssl-certfile
+      - /tls/fullchain.pem
+      - --ssl-keyfile
+      - /tls/privkey.pem
+      - --no-access-log
+      - --no-proxy-headers
+    ports:
+      - '${GATEWAY_LISTEN:?Set the gateway LAN address}:${GATEWAY_PORT:-443}:8443'
+    volumes:
+      - '${GATEWAY_TLS_DIR:-./tls}:/tls:ro'
+    healthcheck:
+      disable: true

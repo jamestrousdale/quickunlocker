@@ -1,0 +1,80 @@
+{
+  "rp_id": "unlock.home.example.com",
+  "origin": "https://unlock.home.example.com",
+  "challenge": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjlM7b6C_e0YluzBmfAH7YH75-LioD-9bMAYocDGHsqNz6x294DMYNm0Gn4Om9ZAAU8c2M8sEGyHFXhqGwfQAtA",
+  "cases": {
+    "valid": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIQDKasP_Afr9bJyYj_ckdgGS3w78bnVsmLcdM06Y9QTp2wIgbl0_m6mt7BsyyGFOZGt1g1JC9ZwBU6ZXZWrwEVVPZGc"
+    },
+    "wrong ceremony": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEYCIQDIm0iAObbvtlAriNM5-UkEW6PGC_umnXTg6Dq_6To0sQIhAKENQSEU5w6EqUnF3wcE5WX11gDAmHFQf8j8KvmxRNfq"
+    },
+    "wrong challenge": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIQDqffeE0hT830xiK2k_2LvBcdjQU0t2Hh009TKixVlG3AIgWYRGj_4tVNRAcrniVbevNo9xBpkn4_ZtFmIBLtI7eic"
+    },
+    "wrong origin": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vd3JvbmcuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIQCZs6-D7hKEGkqGMreeKptjLcbs83-xAdjB68ULjXzZBAIgMKk4O9RWY80eseOsNZZcBrPlUXJsGBYiSSkZy4qk3Fw"
+    },
+    "cross origin": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6dHJ1ZX0",
+      "signature": "MEQCIDv1z7P16OAm4aObKETS3YlvlrSOq1D4GVB8k4B-CXR5AiA2KISOY0dw7oyTBwIvAZyjUekxyeFSlBOeHT28-ByLAg"
+    },
+    "wrong RP": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "UVzhI5UZNkQxB7DbrGb186jvebuoT8jwHP4dGysggqsFAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIQDzE6wXiTvs9XGWW8pp0qE_W13F3LjWL8B_N3o4lnhiowIgdbisPEbbdCZyWA-GBiQQx3XHnKGi3-lDyIjQMyhBcRc"
+    },
+    "no presence": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74EAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIGbxtSCoCiKm4Q7vu7LL8D1UqFgJ4fOlBLR6JGiWfOqDAiEAsKU5Q8Cg2ScPCW5mn_7heCdcVgchpcXrOJ27HhbG3p4"
+    },
+    "no verification": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74BAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIEYwrjkw758o0ukESvRO1_0hB3d8wQ7C6yogrBegvVbRAiEA6IHRGPmI8cH_avmMOO5NHkUeKBqoDkStjCh3jIPiMVg"
+    },
+    "short authenticator data": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEYCIQCAZQ2BvsDeaSgPbahRn_HL1G-yCVg3slYY3Fz6FXCGlgIhAMAi0pdzOHKFhWOLsQjc_uqgsmLWOyzFA-eq7Zxvqm2e"
+    },
+    "swapped key": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIH38WfzIILIQvccF1676BtsWtMIkmjngjJztC_PtDQyYAiEAyZ7cvWCY9qF1aSOmG7QnR9wguOjSGh1KCEJ8EwPjEyw"
+    },
+    "unknown credential": {
+      "credential_id": "dW5rbm93bg",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MEUCIQDKasP_Afr9bJyYj_ckdgGS3w78bnVsmLcdM06Y9QTp2wIgbl0_m6mt7BsyyGFOZGt1g1JC9ZwBU6ZXZWrwEVVPZGc"
+    },
+    "invalid DER": {
+      "credential_id": "dGVzdC1jcmVkZW50aWFs",
+      "authenticator_data": "TTzzgWHe-NgykH-0ONCwd8sMCABiutvKvvCUsOHaC74FAAAAAA",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EeEFSRWhNVUZSWVhHQmthR3h3ZEhoOCIsIm9yaWdpbiI6Imh0dHBzOi8vdW5sb2NrLmhvbWUuZXhhbXBsZS5jb20iLCJjcm9zc09yaWdpbiI6ZmFsc2V9",
+      "signature": "MAYCAYACAQE"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+environments:
+  - name: repolish
+    requires_python: '>=3.11'
+    dependencies:
+      - repolish==1.18.1
+      - hotdogwerx-devkit-workspace
+      - hotdogwerx-devkit-python
+      - hotdogwerx-devkit-releez
+    sources:
+      hotdogwerx-devkit-workspace: &devkit
+        git: https://github.com/hotdog-werx/devkit.git
+        rev: bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc
+        subdirectory: packages/devkit-workspace
+      hotdogwerx-devkit-python:
+        <<: *devkit
+        subdirectory: packages/devkit-python
+      hotdogwerx-devkit-releez:
+        <<: *devkit
+        subdirectory: packages/devkit-releez
