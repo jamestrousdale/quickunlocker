@@ -18,23 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Configure
-        run: cmake -S windows -B windows/build -A x64 -DQUICKUNLOCKER_COVERAGE=${{ !inputs.release-artifacts }}
+        run: cmake -S windows -B windows/build -A x64
       - name: Build
         run: cmake --build windows/build --config $env:BUILD_CONFIG
       - name: Test
         run: ctest --test-dir windows/build -C $env:BUILD_CONFIG --output-on-failure
-      - name: Collect native CTest coverage
+      - name: Collect Windows CTest coverage with Clang
         if: '!inputs.release-artifacts'
         shell: pwsh
-        run: ./windows/collect-coverage.ps1 -Configuration $env:BUILD_CONFIG
+        run: ./windows/collect-coverage.ps1
       - uses: hotdog-werx/mustard@171f9e94181923330a53cad9691fa931ac06e08c # badge and reusable-workflow fixes
         if: '!inputs.release-artifacts'
         with:
           mode: upload
           name: cpp
           config: .github/mustard-windows.yml
-          files: coverage-cpp.xml
-          format: cobertura
+          files: windows/build/coverage/coverage-cpp.lcov
+          format: lcov
           shard: windows-x64
       - name: Windows signing placeholder
         if: inputs.release-artifacts

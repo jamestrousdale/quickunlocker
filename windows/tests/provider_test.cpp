@@ -3,7 +3,6 @@
 #include <credentialprovider.h>
 #include <iostream>
 #include <memory>
-#include <string_view>
 
 namespace {
 
@@ -53,12 +52,9 @@ bool VerifyFactory(GetClassObject getClass, CanUnload canUnload) {
 }
 
 int wmain(int argc, wchar_t** argv) {
-    const bool underCoverage = argc == 3 && std::wstring_view(argv[2]) == L"coverage";
-    if (argc != 2 && !underCoverage) return 1;
-    // The collector adds its native runtime directory to the child process PATH.
-    const DWORD search = underCoverage ? 0 : LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32;
+    if (argc != 2) return 1;
     const std::unique_ptr<std::remove_pointer_t<HMODULE>, Unload> module(
-        LoadLibraryExW(argv[1], nullptr, search));
+        LoadLibraryExW(argv[1], nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32));
     if (!module) {
         std::cerr << "Could not load credential provider DLL: " << GetLastError() << '\n';
         return 1;

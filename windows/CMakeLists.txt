@@ -23,7 +23,27 @@ target_compile_definitions(quickunlock_common PUBLIC UNICODE _UNICODE WIN32_LEAN
 target_include_directories(quickunlock_common PUBLIC common)
 target_link_libraries(quickunlock_common PUBLIC nlohmann_json::nlohmann_json bcrypt crypt32 winhttp advapi32)
 
-option(QUICKUNLOCKER_COVERAGE "Enable MSVC native coverage for CTest targets" OFF)
+option(QUICKUNLOCKER_COVERAGE "Enable Clang source-based coverage for CTest targets" OFF)
+if(QUICKUNLOCKER_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR "QUICKUNLOCKER_COVERAGE requires Clang.")
+    endif()
+    if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        target_compile_options(quickunlock_common PUBLIC /clang:-fprofile-instr-generate /clang:-fcoverage-mapping)
+        # clang-cl injects a reference to its profiling library into instrumented objects.
+        execute_process(
+            COMMAND "${CMAKE_CXX_COMPILER}" -print-resource-dir
+            OUTPUT_VARIABLE clang_resource_dir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        target_link_directories(quickunlock_common PUBLIC "${clang_resource_dir}/lib/windows")
+    else()
+        target_compile_options(quickunlock_common PUBLIC -fprofile-instr-generate -fcoverage-mapping)
+        target_link_options(quickunlock_common PUBLIC -fprofile-instr-generate)
+    endif()
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(webauthn_test tests/webauthn_test.cpp)
@@ -71,10 +91,4 @@ if(BUILD_TESTING)
     add_test(NAME setup_enrollment COMMAND setup_test "${CMAKE_CURRENT_SOURCE_DIR}/tests/assertions.json")
 
     set_tests_properties(webauthn credential_provider setup_enrollment PROPERTIES TIMEOUT 20)
-
-    if(QUICKUNLOCKER_COVERAGE AND MSVC)
-        foreach(target IN ITEMS webauthn_test setup_test provider_test quickunlocker)
-            target_link_options(${target} PRIVATE /PROFILE /INCREMENTAL:NO)
-        endforeach()
-    endif()
 endif()
