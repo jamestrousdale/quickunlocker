@@ -1,0 +1,68 @@
+name: Container build
+
+on:
+  workflow_call:
+    inputs:
+      release-artifacts:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - arch: amd64
+            runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    env:
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build container
+        run: docker build --platform "linux/$ARCH" -t "quickunlocker:$ARCH" relay/app
+      - name: Smoke-test relay and gateway
+        run: |
+          set -euo pipefail
+          relay=$(docker run -d --network none "quickunlocker:$ARCH")
+          trap 'docker rm -f "$relay" "${gateway:-}" >/dev/null 2>&1 || true' EXIT
+          gateway=$(docker run -d --network none -e GATEWAY_BACKEND=https://relay.example.com "quickunlocker:$ARCH" \
+            uvicorn --factory gateway:create_app --host 127.0.0.1 --port 8000 --no-access-log)
+          for service in "$relay:/healthz" "$gateway:/enroll"; do
+            container=${service%%:*}
+            path=${service#*:}
+            for attempt in {1..20}; do
+              if docker exec "$container" python -c 'import sys, urllib.request; urllib.request.urlopen(sys.argv[1], timeout=2)' "http://127.0.0.1:8000$path"; then
+                break
+              fi
+              if [ "$attempt" -eq 20 ]; then
+                docker logs "$container"
+                exit 1
+              fi
+              sleep 1
+            done
+          done
+      - name: Validate Compose
+        if: matrix.arch == 'arm64'
+        env:
+          GATEWAY_BACKEND: https://pi.example.com
+          GATEWAY_LISTEN: '127.0.0.1'
+        run: |
+          docker compose --env-file relay/.env.example -f relay/docker-compose.yml config --quiet
+          docker compose -f relay/docker-compose.gateway.yml config --quiet
+      - name: Export tested container
+        if: inputs.release-artifacts
+        run: docker save "quickunlocker:$ARCH" | gzip -1 > "quickunlocker-$ARCH.tar.gz"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: inputs.release-artifacts
+        with:
+          name: container-${{ matrix.arch }}
+          path: quickunlocker-${{ matrix.arch }}.tar.gz
+          compression-level: 0
+          if-no-files-found: error

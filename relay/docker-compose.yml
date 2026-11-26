@@ -1,0 +1,55 @@
+services:
+  traefik:
+    image: traefik:v3.3.7@sha256:2cd5cc75530c8d07ae0587c743d23eb30cae2436d07017a5ff78498b1a43d09f
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --providers.file.filename=/etc/traefik/quickunlocker.yml
+      - --entrypoints.websecure.address=:${HTTPS_PORT:-443}
+      - --certificatesresolvers.cf.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.cf.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.cf.acme.dnschallenge=true
+      - --certificatesresolvers.cf.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.cf.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+      - --log.level=INFO
+    environment:
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+    volumes:
+      - ./letsencrypt:/letsencrypt
+    configs:
+      - source: traefik_routes
+        target: /etc/traefik/quickunlocker.yml
+
+  unlock:
+    build: ./app
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      RP_ID: ${UNLOCK_RP_ID:-${UNLOCK_HOST}}
+      ORIGIN: ${UNLOCK_ORIGIN:-}
+      RP_NAME: PC Unlock
+      WAKE_BROADCAST: ${WAKE_BROADCAST:-255.255.255.255}
+    volumes:
+      - ./data:/data
+
+configs:
+  traefik_routes:
+    content: |
+      http:
+        routers:
+          unlock:
+            rule: Host(`${UNLOCK_HOST}`)
+            entryPoints: [websecure]
+            middlewares: [lan-only]
+            service: unlock
+            tls:
+              certResolver: cf
+        middlewares:
+          lan-only:
+            ipAllowList:
+              sourceRange: ["${LAN_CIDR:-192.168.0.0/16}"]
+        services:
+          unlock:
+            loadBalancer:
+              servers:
+                - url: http://127.0.0.1:8000

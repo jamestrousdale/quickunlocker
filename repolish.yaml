@@ -1,0 +1,21 @@
+providers:
+  workspace:
+    cli: devkit-workspace-link
+    context_overrides:
+      devkit_ref: &devkit-ref bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc
+  python:
+    cli: devkit-python-link
+  releez:
+    cli: devkit-releez-link
+    context_overrides:
+      devkit_ref: *devkit-ref
+providers_order: [workspace, python, releez]
+
+# Quickunlocker owns coverage reporting, binary packaging, and the split Pages deployment.
+paused_files:
+  - .github/workflows/ci-checks.yaml
+  - .github/workflows/deploy-docs.yaml
+  - .github/workflows/finalize-release.yaml
+
+post_process:
+  - mise run workspace:dprint:format

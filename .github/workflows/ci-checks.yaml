@@ -1,0 +1,62 @@
+name: ci-checks
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  repo-checks:
+    uses: hotdog-werx/devkit/.github/workflows/__workspace_repo-checks.yaml@bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc
+    with:
+      enable-docs: true
+
+  python-checks:
+    uses: hotdog-werx/devkit/.github/workflows/__python_python-checks.yaml@bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc
+    with:
+      operating-systems: '["ubuntu-latest"]'
+      mustard: true
+
+  # Mustard's report job publishes checks, comments, signed baselines, and the
+  # badge, so it runs here with its own permissions. A reusable workflow job
+  # requesting them would fail every caller that does not grant them.
+  coverage:
+    needs: [python-checks]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+      checks: write
+      pull-requests: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: hotdog-werx/mustard@171f9e94181923330a53cad9691fa931ac06e08c # badge and reusable-workflow fixes
+        with:
+          config-source: head
+          fail-ci: 'true'
+
+  windows:
+    uses: ./.github/workflows/windows-build.yaml
+
+  cpp-coverage:
+    needs: [windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+      checks: write
+      pull-requests: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: hotdog-werx/mustard@171f9e94181923330a53cad9691fa931ac06e08c # badge and reusable-workflow fixes
+        with:
+          name: cpp
+          config: .github/mustard-windows.yml
+          config-source: head
+          fail-ci: 'true'
+
+  relay-container:
+    uses: ./.github/workflows/container-build.yaml

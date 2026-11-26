@@ -1,0 +1,48 @@
+[project]
+site_name = "Quickunlocker"
+site_description = "Install, operate and test phone passkey sign-in and Wake-on-LAN for Windows."
+site_url = "https://jamestrousdale.github.io/quickunlocker/"
+repo_url = "https://github.com/jamestrousdale/quickunlocker"
+repo_name = "jamestrousdale/quickunlocker"
+edit_uri = "edit/master/docs/"
+strict = true
+
+nav = [
+  { Home = "index.md" },
+  { Install = [{ "Pi relay" = "install/relay.md" }, { "Trusted gateway" = "install/gateway.md" }, { Windows = "install/windows.md" }, { "Phone enrollment" = "install/phone.md" }] },
+  { Operate = [{ "Wake and unlock" = "operate/wake-and-unlock.md" }, { Maintenance = "operate/maintenance.md" }, { Troubleshooting = "operate/troubleshooting.md" }] },
+  { Reference = [{ Configuration = "reference/configuration.md" }, { "Security model" = "reference/security.md" }, { "Relay API" = "reference/api.md" }] },
+  { Contribute = [{ Testing = "develop/testing.md" }, { Releases = "develop/releases.md" }, { "Documentation and Pages" = "develop/documentation.md" }] },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "content.action.edit",
+  "content.code.copy",
+  "content.code.select",
+  "navigation.footer",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "search.highlight",
+]
+
+[[project.theme.palette]]
+scheme = "default"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/moon-star"
+toggle.name = "Switch to light mode"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/jamestrousdale/quickunlocker"
