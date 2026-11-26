@@ -11,9 +11,10 @@ providers:
       devkit_ref: *devkit-ref
 providers_order: [workspace, python, releez]
 
-# Quickunlocker owns coverage reporting and binary release packaging.
+# Quickunlocker owns coverage reporting, binary packaging, and the split Pages deployment.
 paused_files:
   - .github/workflows/ci-checks.yaml
+  - .github/workflows/deploy-docs.yaml
   - .github/workflows/finalize-release.yaml
 
 post_process:

@@ -23,10 +23,30 @@ jobs:
         run: cmake --build windows/build --config $env:BUILD_CONFIG
       - name: Test
         run: ctest --test-dir windows/build -C $env:BUILD_CONFIG --output-on-failure
+      - name: Download LLVM for coverage
+        if: '!inputs.release-artifacts'
+        id: coverage-llvm
+        shell: pwsh
+        run: |
+          $version = '22.1.8'
+          $asset = "LLVM-$version-win64.exe"
+          $archive = Join-Path $env:RUNNER_TEMP $asset
+          $root = Join-Path $env:RUNNER_TEMP "llvm-$version"
+          curl.exe --fail --location --retry 3 --silent --show-error `
+            "https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/$asset" --output $archive
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne '16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c') {
+            throw 'LLVM download did not match the pinned SHA-256.'
+          }
+          & "$env:ProgramFiles/7-Zip/7z.exe" x $archive "-o$root" bin lib -y -bso0 -bsp0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "root=$root" >> $env:GITHUB_OUTPUT
       - name: Collect Windows CTest coverage with Clang
         if: '!inputs.release-artifacts'
         shell: pwsh
-        run: ./windows/collect-coverage.ps1
+        env:
+          COVERAGE_LLVM_ROOT: ${{ steps.coverage-llvm.outputs.root }}
+        run: ./windows/collect-coverage.ps1 -LlvmRoot $env:COVERAGE_LLVM_ROOT
       - uses: hotdog-werx/mustard@171f9e94181923330a53cad9691fa931ac06e08c # badge and reusable-workflow fixes
         if: '!inputs.release-artifacts'
         with:

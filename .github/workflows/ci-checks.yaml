@@ -9,7 +9,7 @@ jobs:
   repo-checks:
     uses: hotdog-werx/devkit/.github/workflows/__workspace_repo-checks.yaml@bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc
     with:
-      enable-docs: false
+      enable-docs: true
 
   python-checks:
     uses: hotdog-werx/devkit/.github/workflows/__python_python-checks.yaml@bf98e0adc6770dd3628fcfa55d68c1d4ac550ebc

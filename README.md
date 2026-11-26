@@ -15,6 +15,9 @@ iPhone (PWA)  ──passkey assertion──▶  relay on Raspberry Pi  ◀──
                                                                                 verifies + unlocks
 ```
 
+[Documentation](https://jamestrousdale.github.io/quickunlocker/) ·
+[Documentation source](docs/index.md)
+
 ## Security model
 
 - **The PC trusts nothing but its pinned public key.** It generates a fresh

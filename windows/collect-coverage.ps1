@@ -1,3 +1,7 @@
+param(
+    [string] $LlvmRoot = (Join-Path $env:ProgramFiles 'LLVM')
+)
+
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
@@ -6,7 +10,7 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer
 $visualStudio = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 & (Join-Path $visualStudio 'Common7/Tools/Launch-VsDevShell.ps1') -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
 
-$llvm = Join-Path $env:ProgramFiles 'LLVM/bin'
+$llvm = Join-Path (Resolve-Path -LiteralPath $LlvmRoot).Path 'bin'
 $clang = Join-Path $llvm 'clang-cl.exe'
 $profdata = Join-Path $llvm 'llvm-profdata.exe'
 $cov = Join-Path $llvm 'llvm-cov.exe'

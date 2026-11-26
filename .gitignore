@@ -29,3 +29,4 @@ letsencrypt/
 .repolish/
 .uv-toolbox/
 /dprint.json
+/site/

@@ -30,6 +30,7 @@ shellcheck = "0.11.0"
 "pipx:complexipy" = "4.0.2"
 "pipx:pydoclint" = "0.9.1"
 "pipx:releez" = "1.1.2"
+"pipx:zensical" = "0.0.62"
 
 [task_config]
 includes = [
@@ -52,6 +53,7 @@ depends = [
   "workspace:actionlint:check",
   "workspace:repolish:check",
   "workspace:uv-toolbox-lock:check",
+  "workspace:docs:build",
 ]
 
 [plugins]

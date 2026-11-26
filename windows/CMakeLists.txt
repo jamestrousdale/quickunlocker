@@ -29,6 +29,9 @@ if(QUICKUNLOCKER_COVERAGE)
         message(FATAL_ERROR "QUICKUNLOCKER_COVERAGE requires Clang.")
     endif()
     if(CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "22")
+            message(FATAL_ERROR "The Visual Studio coverage build requires clang-cl 22 or newer. Pass -LlvmRoot to collect-coverage.ps1 to select that LLVM installation.")
+        endif()
         target_compile_options(quickunlock_common PUBLIC /clang:-fprofile-instr-generate /clang:-fcoverage-mapping)
         # clang-cl injects a reference to its profiling library into instrumented objects.
         execute_process(
